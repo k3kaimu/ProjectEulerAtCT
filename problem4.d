@@ -1,5 +1,8 @@
-import std.conv,
+import std.algorithm,
+       std.conv,
        std.range;
+
+import util;
 
 pragma(msg, problem4());
 
