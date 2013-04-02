@@ -5,6 +5,7 @@ import core.bitop;
 import std.algorithm,
        std.functional,
        std.math,
+       std.numeric,
        std.range,
        std.traits,
        std.typecons;
@@ -164,4 +165,52 @@ unittest{
 
     enum a = 12.primeFactorize();
     enum b = 12L.primeFactorize();
+}
+
+
+///数をbase進の桁ごとに区切った配列を返す。例123→[1,2,3].reverse
+int[] splitdigit(uint base = 10, T)(T a){
+    auto dst = appender!(int[])();
+    //Tを桁ごとに区切ったものを配列として返す。
+    while(a != 0){
+        static if(base != 2){
+            dst.put(a%base);
+            a /= base;
+        }else{
+            dst.put(a&1);
+            a >>= 1;
+        }
+    }
+    return dst.data;
+}
+unittest{
+    assert(equal(splitdigit(123), [1,2,3].reverse));
+}
+
+///回文数かどうか判定
+bool isPalindromic(uint Base = 10,T)(T a){
+    auto spdg = splitdigit!Base(a);
+    return equal(spdg,spdg.dup.reverse);
+}
+unittest{
+    assert(121.isPalindromic);
+    assert(111.isPalindromic);
+    assert(!123.isPalindromic);
+    assert(1221.isPalindromic);
+    assert(!1233.isPalindromic);
+}
+
+///最小公倍数を返す
+T lcm(T)(T x,T y){
+    if(x==0 || y==0)
+        return 0;
+    
+    return x*(y/gcd(x,y));
+}
+unittest{
+    assert(lcm(1, 1) == 1);
+    assert(lcm(2, 1) == 2);
+    assert(lcm(1, 2) == 2);
+    assert(lcm(2, 2) == 2);
+    assert(lcm(2, 3) == 6);
 }
