@@ -8,7 +8,8 @@ import std.algorithm,
        std.numeric,
        std.range,
        std.traits,
-       std.typecons;
+       std.typecons,
+       std.typetuple;
 
 ///素数かどうか判定する。遅い
 bool isPrime_lowspeed(T)(T prime) if(__traits(isIntegral,T))
@@ -42,6 +43,8 @@ bool isPrime(T)(T src) if(__traits(isIntegral,T))
 
     return true;
 }
+
+
 unittest{
     import std.range;
     assert(iota(1000000L).unaryFun!(a => a.adjoin!(
@@ -155,13 +158,13 @@ body{
                            : [Tuple!(T,uint)(q, 1u),Tuple!(T,uint)(p, 1u)]);
 }
 unittest{
-    assert(equal(primeFactorize(128),  [tuple(2,7u)]));
-    assert(equal(primeFactorize(412),  [tuple(2,2u), tuple(103,1u)]));
-    assert(equal(primeFactorize(512),  [tuple(2,9u)]));
-    assert(equal(primeFactorize(27),   [tuple(3,3u)]));
-    assert(equal(primeFactorize(153),  [tuple(3,2u), tuple(17,1u)]));
-    assert(equal(primeFactorize(14402),[tuple(2,1u), tuple(19,1u), tuple(379,1u)]));
-    assert(equal(primeFactorize(75L),  [tuple(3L,1u), tuple(5L,2u)]));
+    assert(equal(primeFactorize(128),  [tuple(2, 7u)]));
+    assert(equal(primeFactorize(412),  [tuple(2, 2u), tuple(103, 1u)]));
+    assert(equal(primeFactorize(512),  [tuple(2, 9u)]));
+    assert(equal(primeFactorize(27),   [tuple(3, 3u)]));
+    assert(equal(primeFactorize(153),  [tuple(3, 2u), tuple(17, 1u)]));
+    assert(equal(primeFactorize(14402),[tuple(2, 1u), tuple(19, 1u), tuple(379, 1u)]));
+    assert(equal(primeFactorize(75L),  [tuple(3L, 1u), tuple(5L, 2u)]));
 
     enum a = 12.primeFactorize();
     enum b = 12L.primeFactorize();
@@ -173,13 +176,8 @@ int[] splitdigit(uint base = 10, T)(T a){
     auto dst = appender!(int[])();
     //Tを桁ごとに区切ったものを配列として返す。
     while(a != 0){
-        static if(base != 2){
-            dst.put(a%base);
-            a /= base;
-        }else{
-            dst.put(a&1);
-            a >>= 1;
-        }
+        dst.put(a%base);
+        a /= base;
     }
     return dst.data;
 }
@@ -213,4 +211,31 @@ unittest{
     assert(lcm(1, 2) == 2);
     assert(lcm(2, 2) == 2);
     assert(lcm(2, 3) == 6);
+}
+
+
+template TReduce(alias fun, R...)
+{
+    static if(R.length == 2)
+        enum TReduce = fun(R[0], R[1]);
+    else
+        alias TReduce = TReduce!(fun, fun(R[0], R[1]), R[2 .. $]);
+}
+
+///等差数列のタプルを作成
+template TIota(int Start,int End,int Diff = 1)
+{
+    static assert(Diff);
+    
+    static if(Diff > 0)
+        static assert(Start <= End);
+    else static if(Diff < 0)
+        static assert(Start >= End);
+    else
+        static assert(0,"Diff of IotaTuple cannot 0");
+    
+    static if(Start == End)
+        alias TypeTuple!() TIota;
+    else
+        alias TypeTuple!(Start, TIota!(Start+Diff,End,Diff)) TIota;
 }
